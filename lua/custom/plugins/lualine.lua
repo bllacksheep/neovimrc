@@ -5,6 +5,15 @@ return {
 			options = {
 				theme = "horizon",
 			},
+			sections = {
+				lualine_c = {
+					{
+						"filename",
+						file_status = true,
+						path = 2,
+					},
+				},
+			},
 		})
 	end,
 }
