@@ -10,7 +10,7 @@ return {
 					{
 						"filename",
 						file_status = true,
-						path = 2,
+						path = 1,
 					},
 				},
 			},
