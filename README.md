@@ -14,6 +14,7 @@ nnn() { podman run -it --rm -v $PWD/$1:/tmp/$1 docker.io/maclighiche/dev-arm64:l
 # mount certificates if required
 function nnn()
 {
+  CONTAINER_RUNTIME=podman
   local_certs=$HOME/.certs
   remote_certs=/usr/local/share/ca-certificates
   image=docker.io/maclighiche/dev-amd64:latest
@@ -27,7 +28,7 @@ function nnn()
   fi
 
   if [ "$local_workspace" = "update" ]; then
-    podman pull ${image}
+    $CONTAINER_RUNTIME pull ${image}
     ext=$?
     return $ext
   fi
@@ -36,7 +37,7 @@ function nnn()
     local_workspace=$(echo $local_workspace | tr -d 'r:')
     # no need to pass leading /
     cmd="oil-ssh://user@ip/pathifrequired/$local_workspace"
-    podman run -it --rm \
+    $CONTAINER_RUNTIME run -it --rm \
 	  -v $local_certs:$remote_certs:Z \
 	  -v $ssh:/root/.ssh:Z \
 	  $image /bin/bash -c "update-ca-certificates && nvim $remote_workspace";
@@ -45,7 +46,7 @@ function nnn()
   fi
 
   echo mounting $local_workspace to $remote_workspace
-  podman run -it --rm \
+  $CONTAINER_RUNTIME run -it --rm \
 	  -v $local_workspace:$remote_workspace:Z \
 	  -v $local_certs:$remote_certs:Z \
 	  -v $ssh:/root/.ssh:Z \
