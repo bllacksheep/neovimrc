@@ -14,40 +14,43 @@ nnn() { podman run -it --rm -v $PWD/$1:/tmp/$1 docker.io/maclighiche/dev-arm64:l
 # mount certificates if required
 function nnn()
 {
-  lcerts=$HOME/.certs
-  rcerts=/usr/local/share/ca-certificates
+  local_certs=$HOME/.certs
+  remote_certs=/usr/local/share/ca-certificates
   image=docker.io/maclighiche/dev-amd64:latest
   ssh=$HOME/.ssh
-  cmd=/tmp/$1
-  path=$1
 
-  cwd=$PWD/$path
-  
-  if [ "$path" = "update" ]; then
+  local_workspace="$1"
+  remote_workspace="/tmp/dev/$(basename $1)"
+
+  if [ "$1" = "." ]; then
+  	remote_workspace="/tmp/dev/$(basename $PWD)"
+  fi
+
+  if [ "$local_workspace" = "update" ]; then
     podman pull ${image}
-    ext=$? 
+    ext=$?
     return $ext
   fi
-  
-  if [[ "$path" =~ ^"r:" ]]; then
-    path=$(echo $path | tr -d 'r:')
+
+  if [[ "$local_workspace" =~ ^"r:" ]]; then
+    local_workspace=$(echo $local_workspace | tr -d 'r:')
     # no need to pass leading /
-    cmd="oil-ssh://<hostname>@<ip>/<somepathisrequired>/$path"
+    cmd="oil-ssh://user@ip/pathifrequired/$local_workspace"
     podman run -it --rm \
-          -v $lcerts:$rcerts:Z \
-          -v $ssh:/root/.ssh:Z \
-          $image /bin/bash -c "update-ca-certificates && nvim $cmd";
-    ext=$? 
+	  -v $local_certs:$remote_certs:Z \
+	  -v $ssh:/root/.ssh:Z \
+	  $image /bin/bash -c "update-ca-certificates && nvim $remote_workspace";
+    ext=$?
     return $ext
   fi
-  
-  echo mounting $cwd to /tmp/dev
+
+  echo mounting $local_workspace to $remote_workspace
   podman run -it --rm \
-          -v $cwd:/tmp/dev:Z \ 
-          -v $lcerts:$rcerts:Z \
-          -v $ssh:/root/.ssh:Z \
-          $image /bin/bash -c "update-ca-certificates && nvim $cmd";
-  ext=$? 
+	  -v $local_workspace:$remote_workspace:Z \
+	  -v $local_certs:$remote_certs:Z \
+	  -v $ssh:/root/.ssh:Z \
+	  $image /bin/bash -c "update-ca-certificates && nvim $remote_workspace";
+  ext=$?
   return $ext
 }
 ```
