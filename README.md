@@ -36,7 +36,7 @@ function nnn()
   if [[ "$local_workspace" =~ ^"r:" ]]; then
     local_workspace=$(echo $local_workspace | tr -d 'r:')
     # no need to pass leading /
-    cmd="oil-ssh://user@ip/pathifrequired/$local_workspace"
+    remote_workspace="oil-ssh://user@ip/pathifrequired/$local_workspace"
     $CONTAINER_RUNTIME run -it --rm \
 	  -v $local_certs:$remote_certs:Z \
 	  -v $ssh:/root/.ssh:Z \
