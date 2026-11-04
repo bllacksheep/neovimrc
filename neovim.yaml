@@ -35,6 +35,7 @@
     - name: Install dependencies for Neovim
       package:
         name:
+          - tree-sitter-cli
           - git
           - gettext
           - unzip
