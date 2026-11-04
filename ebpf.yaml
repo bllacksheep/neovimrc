@@ -14,9 +14,9 @@
 
     debian_packages:
       - build-essential
-      - linux-headers-{{ ansible_kernel }}
+      - linux-headers-{{ ansible_facts["kernel"] }}
         #- gcc-multilib
-      - linux-tools-{{ ansible_kernel }}
+      - linux-tools-{{ ansible_facts["kernel"] }}
       - linux-tools-common
       - linux-tools-generic
       - libbpf-dev
@@ -49,13 +49,13 @@
       apt:
         name: "{{ debian_packages }}"
         state: present
-      when: ansible_os_family == "Debian"
+      when: ansible_facts["os_family"] == "Debian"
 
     - name: Install RedHat/CentOS/Fedora-specific packages
       yum:
         name: "{{ redhat_packages }}"
         state: present
-      when: ansible_os_family == "RedHat"
+      when: ansible_facts["os_family"] == "RedHat"
 
     - name: Verify bpftool is available
       command: bpftool version

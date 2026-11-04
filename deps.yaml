@@ -2,7 +2,7 @@
   hosts: localhost
   become: no
   vars:
-    current_shell: "{{ ansible_user_shell | basename }}"
+    current_shell: "{{ ansible_facts['user_shell'] | basename }}"
     lazygit_repo: "https://github.com/jesseduffield/lazygit"
     font_package: "font-fira-code-nerd-font"
     python_env_name: "nvim"
@@ -10,9 +10,9 @@
   tasks:
     - name: Detect operating system
       ansible.builtin.set_fact:
-        is_rhel:  "{{ ansible_system == 'Linux' and ansible_facts['os_family'] == 'RedHat' }}"
-        is_ubuntu: "{{ ansible_system == 'Linux' and ansible_facts['os_family'] == 'Debian' }}"
-        is_macos:  "{{ ansible_system == 'Darwin'}}"
+        is_rhel:  "{{ ansible_facts['system'] == 'Linux' and ansible_facts['os_family'] == 'RedHat' }}"
+        is_ubuntu: "{{ ansible_facts['system'] == 'Linux' and ansible_facts['os_family'] == 'Debian' }}"
+        is_macos:  "{{ ansible_facts['system'] == 'Darwin'}}"
 
     - name: Install packages on Linux
       ansible.builtin.package:
@@ -54,7 +54,7 @@
 
     - name: Remove previous version
       ansible.builtin.file:
-        name: "{{ ansible_env.HOME }}/.pyenv"
+        name: "{{ ansible_facts['env']['HOME'] }}/.pyenv"
         state: absent
 
     - name: Ensure pyenv and virtualenv are installed
@@ -101,6 +101,7 @@
         line: "alias vim='nvim'"
         state: present
       loop: "{{ [ '~/.bashrc' ] if current_shell == 'bash' else [ '~/.zshrc' ] if current_shell == 'zsh' else [] }}"
+      tags: ["never"]
 
     - name: Add pyenv to rc
       ansible.builtin.blockinfile:
@@ -132,9 +133,9 @@
 
     - name: create font cache
       ansible.builtin.file:
-        path: "{{ ansible_env.HOME }}/.fonts"
-        owner: "{{ ansible_user }}"
-        group: "{{ ansible_user }}"
+        path: "{{ ansible_facts['env']['HOME'] }}/.fonts"
+        owner: "{{ ansible_facts['user_id'] }}"
+        group: "{{ ansible_facts['user_id'] }}"
         state: directory 
       tags: ["font"]
 

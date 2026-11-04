@@ -2,7 +2,7 @@
 - name: Update Ubuntu and install Neovim
   hosts: localhost
   vars:
-    desired_version: "v0.11.4"
+    desired_version: "v0.12.6"
   tasks:
     - name: Check nvim version
       command: nvim -v
@@ -81,7 +81,7 @@
       become: yes
       loop:
         - /opt/nvim
-        - "{{ ansible_env.HOME }}/.config/nvim"
+        - "{{ ansible_facts['env']['HOME'] }}/.config/nvim"
 
     - name: Move Neovim files to /opt/nvim
       shell: mv "/tmp/nvim-extracted/nvim-linux-{{ ISA }}/" /opt/nvim/
@@ -104,12 +104,12 @@
     - name: Clone Neovim Kickstart config
       git:
         repo: https://github.com/nvim-lua/kickstart.nvim.git
-        dest: "{{ ansible_env.HOME }}/.config/nvim"
+        dest: "{{ ansible_facts['env']['HOME'] }}/.config/nvim"
         depth: 1
 
     - name: Set ownership of Neovim config
       file:
-        path: "{{ ansible_env.HOME }}/.config/nvim"
+        path: "{{ ansible_facts['env']['HOME'] }}/.config/nvim"
         owner: "{{ ansible_user }}"
         group: "{{ ansible_user }}"
         recurse: yes
@@ -124,13 +124,13 @@
 
     - name: Enable custom plugins in kickstart
       lineinfile:
-        dest: "{{ ansible_env.HOME }}/.config/nvim/init.lua"
+        dest: "{{ ansible_facts['env']['HOME'] }}/.config/nvim/init.lua"
         regexp: "^  -- { import = 'custom.plugins' },$"
         line: " { import = 'custom.plugins' },"
 
     - name: Enable nerd fonts in kickstart
       lineinfile:
-        dest: "{{ ansible_env.HOME }}/.config/nvim/init.lua"
+        dest: "{{ ansible_facts['env']['HOME'] }}/.config/nvim/init.lua"
         regexp: "^vim.g.have_nerd_font = false$"
         line: "vim.g.have_nerd_font = true"
 

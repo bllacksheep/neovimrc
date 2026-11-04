@@ -3,7 +3,7 @@
   hosts: all
   become: yes
   vars:
-    ISA: amd64 
+    ISA: arm64 
     go_download_base: "https://go.dev/dl/"
     go_install_dir: "/usr/local"
   tasks:
