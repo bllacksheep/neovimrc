@@ -21,6 +21,11 @@ rhel_packages:
     - ncurses-devel
     - tk-devel
 debian_packages:
+    - fonts-noto-color-emoji
+    - ripgrep
+    - gcc
+    - make
+    - zip
     - fontconfig
     - npm
     - xclip
