@@ -3,10 +3,10 @@ This is written for me, it's my portable dev environment, so not expecting reuse
 changes across multiple machines and in and out my neovim config. The `Sync` module will be moved out of this into it's own lua plugin soon.
 
 ```
-NVIM v0.11.4
-KICKSTART 3338d39
+NVIM v0.12.6
+KICKSTART 8e35dbe 
 ```
-to run as container either arm64 or amd64
+run inside container either arm64 or amd64
 
 ```bash
 # mount tmp 
@@ -75,7 +75,6 @@ make push VERSION=vx.y.z
 ```
 ### everything else
 ```
-
 Once deployed 
 `<leader>cfg` syncs any new config from git, `<leader>ctg` syncs new edits into git
 
