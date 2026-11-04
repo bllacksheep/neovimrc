@@ -9,4 +9,5 @@
   tags: ["ebpf"]
 - import_playbook: neovim.yaml
   tags: ["nvim"]
-  #- import_playbook: plugins.yaml
+#- import_playbook: plugins.yaml
+#  tags: ["plugins"]

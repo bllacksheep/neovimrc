@@ -104,7 +104,7 @@
 
     - name: Clone Neovim Kickstart config
       git:
-        repo: https://github.com/nvim-lua/kickstart.nvim.git
+        repo: https://github.com/bllacksheep/kickstart.nvim.git
         dest: "{{ ansible_facts['env']['HOME'] }}/.config/nvim"
         depth: 1
 
