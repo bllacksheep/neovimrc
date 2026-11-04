@@ -1,10 +1,10 @@
 - name: Setup development environment
   hosts: localhost
+  gather_facts: yes
   become: no
   vars:
     current_shell: "{{ ansible_facts['user_shell'] | basename }}"
     lazygit_repo: "https://github.com/jesseduffield/lazygit"
-    font_package: "font-fira-code-nerd-font"
     python_env_name: "nvim"
     python_version: "3.9.0"
   tasks:
@@ -45,11 +45,6 @@
           - lazygit
           - fd
           - npm
-      when: is_macos
-
-    - name: Install font on macOS
-      ansible.builtin.homebrew_cask:
-        name: "{{ font_package }}"
       when: is_macos
 
     - name: Remove previous version
@@ -131,20 +126,3 @@
         backup: yes
       loop: "{{ [ '~/.bashrc' ] if current_shell == 'bash' else [ '~/.zshrc' ] if current_shell == 'zsh' else [] }}"
 
-    - name: create font cache
-      ansible.builtin.file:
-        path: "{{ ansible_facts['env']['HOME'] }}/.fonts"
-        owner: "{{ ansible_facts['user_id'] }}"
-        group: "{{ ansible_facts['user_id'] }}"
-        state: directory 
-      tags: ["font"]
-
-    - name: Install FiraCode nerd font
-      ansible.builtin.shell: |
-        curl -Lo /tmp/firacode.zip "https://github.com/ryanoasis/nerd-fonts/releases/download/v3.4.0/FiraCode.zip"
-        unzip /tmp/firacode.zip -d ~/.fonts/
-        fc-cache -fv
-      when: is_ubuntu or is_rhel
-      args:
-        executable: /bin/bash
-      tags: ["font"]

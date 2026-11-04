@@ -1,6 +1,8 @@
 ---
 - import_playbook: deps.yaml
   tags: ["deps"]
+- import_playbook: fonts.yaml
+  tags: ["fonts"]
 - import_playbook: go.yaml
   tags: ["go"]
 - import_playbook: ebpf.yaml

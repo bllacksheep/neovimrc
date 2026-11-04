@@ -1,0 +1,38 @@
+- name: Setup fonts
+  hosts: localhost
+  gather_facts: yes
+  become: no
+  vars:
+    current_shell: "{{ ansible_facts['user_shell'] | basename }}"
+    font_package: "font-fira-code-nerd-font"
+  tasks:
+    - name: Detect operating system
+      ansible.builtin.set_fact:
+        is_rhel:  "{{ ansible_facts['system'] == 'Linux' and ansible_facts['os_family'] == 'RedHat' }}"
+        is_ubuntu: "{{ ansible_facts['system'] == 'Linux' and ansible_facts['os_family'] == 'Debian' }}"
+        is_macos:  "{{ ansible_facts['system'] == 'Darwin'}}"
+      tags: ["font"]
+
+    - name: Install font on macOS
+      ansible.builtin.homebrew_cask:
+        name: "{{ font_package }}"
+      when: is_macos
+
+    - name: create font cache
+      ansible.builtin.file:
+        path: "{{ ansible_facts['env']['HOME'] }}/.fonts"
+        owner: "{{ ansible_user }}"
+        group: "{{ ansible_user }}"
+        state: directory 
+      when: is_ubuntu or is_rhel
+      tags: ["font"]
+
+    - name: Install FiraCode nerd font
+      ansible.builtin.shell: |
+        curl -Lo /tmp/firacode.zip "https://github.com/ryanoasis/nerd-fonts/releases/download/v3.5.1/FiraCode.zip"
+        unzip /tmp/firacode.zip -d ~/.fonts/
+        fc-cache -fv
+      when: is_ubuntu or is_rhel
+      args:
+        executable: /bin/bash
+      tags: ["font"]
