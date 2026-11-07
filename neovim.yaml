@@ -30,7 +30,8 @@
           - "installed_version is version(desired_version, '<=')"
         fail_msg: "Neovim is already up-to-date ({{ installed_version }} >= {{ desired_version }}). Skipping upgrade."
         success_msg: "Neovim needs upgrade ({{ installed_version }} < {{ desired_version }}). Continuing."
-      when: nvim.failed == false
+      when: nvim.failed == false and 'bypassversioncheck' not in ansible_run_tags
+      tags: ["always"]
 
     - name: Install dependencies for Neovim
       package:
@@ -44,6 +45,12 @@
           - npm
         state: present
       become: yes
+
+    - name: Use Nightly
+      set_fact:
+        desired_version: "nightly"
+      tags: ["nightly"]
+
     - name: Download Neovim latest release
       get_url:
         url: "https://github.com/neovim/neovim/releases/download/{{ desired_version }}/nvim-linux-{{ ISA }}.tar.gz"
@@ -101,41 +108,3 @@
         create: yes
         mode: '0644'
       become: yes
-
-    - name: Clone Neovim Kickstart config
-      git:
-        repo: https://github.com/bllacksheep/kickstart.nvim.git
-        dest: "{{ ansible_facts['env']['HOME'] }}/.config/nvim"
-        depth: 1
-
-    - name: Set ownership of Neovim config
-      file:
-        path: "{{ ansible_facts['env']['HOME'] }}/.config/nvim"
-        owner: "{{ ansible_user }}"
-        group: "{{ ansible_user }}"
-        recurse: yes
-
-    - name: Clean up downloaded tarball and extracted files
-      file:
-        path: "{{ item }}"
-        state: absent
-      loop:
-        - "/tmp/nvim-linux-{{ ISA }}.tar.gz"
-        - /tmp/nvim-extracted
-
-    - name: Enable custom plugins in kickstart
-      lineinfile:
-        dest: "{{ ansible_facts['env']['HOME'] }}/.config/nvim/init.lua"
-        regexp: "^  -- { import = 'custom.plugins' },$"
-        line: " { import = 'custom.plugins' },"
-
-    - name: Enable nerd fonts in kickstart
-      lineinfile:
-        dest: "{{ ansible_facts['env']['HOME'] }}/.config/nvim/init.lua"
-        regexp: "^vim.g.have_nerd_font = false$"
-        line: "vim.g.have_nerd_font = true"
-
-    - name: Sync customizations
-      ansible.builtin.shell: nvim --headless -c "luafile after/plugin/sync.lua" -c "lua Sync({})" -c "qa"
-      tags: ["sync"]
-    

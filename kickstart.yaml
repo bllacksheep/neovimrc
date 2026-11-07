@@ -1,0 +1,29 @@
+---
+- name: Kickstart
+  hosts: localhost
+  tasks:
+    - name: Clone Neovim Kickstart config
+      git:
+        repo: https://github.com/bllacksheep/kickstart.nvim.git
+        dest: "{{ ansible_facts['env']['HOME'] }}/.config/nvim"
+        depth: 1
+
+    - name: Set ownership of Neovim config
+      file:
+        path: "{{ ansible_facts['env']['HOME'] }}/.config/nvim"
+        owner: "{{ ansible_user }}"
+        group: "{{ ansible_user }}"
+        recurse: yes
+
+    - name: Clean up downloaded tarball and extracted files
+      file:
+        path: "{{ item }}"
+        state: absent
+      loop:
+        - "/tmp/nvim-linux-{{ ISA }}.tar.gz"
+        - /tmp/nvim-extracted
+
+    - name: Sync customizations
+      ansible.builtin.shell: nvim --headless -c "luafile after/plugin/sync.lua" -c "lua Sync({})" -c "qa"
+      tags: ["sync"]
+    

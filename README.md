@@ -90,6 +90,12 @@ gh repo clone b0bul/neovimrc && cd neovimrc
 ansible-playbook -c local -i 'localhost,' main.yaml -u $(whoami)
 # keyboard maps <Leader>cfg <Leader>ctg to sync 
 ```
+deploy neovim nightly bypassing any agressive version checking. Version checking can be bypassed regardless but 'nightly' tag must be given to replace the vx.y.z with 'nightly'
+```
+ansible-playbook -c local -i 'localhost,' main.yaml -u $(whoami) --tags nvim,nightly,kickstart,bypassversioncheck
+```
+
+
 ### reqs 
 - `'nvim-tree/nvim-web-devicons'` is pre-installed by kickstart
 
