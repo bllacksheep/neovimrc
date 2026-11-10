@@ -4,6 +4,24 @@
   vars:
     desired_version: "v0.12.6"
   tasks:
+    - name: Detect operating system
+      ansible.builtin.set_fact:
+        is_rhel:   "{{ ansible_facts['system'] == 'Linux' and ansible_facts['os_family'] == 'RedHat' }}"
+        is_ubuntu: "{{ ansible_facts['system'] == 'Linux' and ansible_facts['os_family'] == 'Debian' }}"
+        is_macos:  "{{ ansible_facts['system'] == 'Darwin' }}"
+  
+    - name: Detect linux
+      ansible.builtin.set_fact:
+        is_linux:  "{{ is_rhel or is_ubuntu }}"
+
+    - name: Detect OS kernel name
+      shell: uname -s
+      register: kernel
+
+    - name: Set OS kernel name
+      set_fact:
+         os: "{{ 'macos' if is_macos else 'linux' }}"
+
     - name: Check nvim version
       command: nvim -v
       become: no
@@ -41,10 +59,30 @@
           - gettext
           - unzip
           - curl
-          - tar
+          - gnu-tar
+          - npm
+          - lazygit
+          - fd
           - npm
         state: present
       become: yes
+      when: is_linux
+
+    - name: Install packages on macOS
+      become: false
+      ansible.builtin.homebrew:
+        name:
+          - tree-sitter-cli
+          - git
+          - gettext
+          - unzip
+          - curl
+          - gnu-tar
+          - npm
+          - lazygit
+          - fd
+          - npm
+      when: is_macos
 
     - name: Use Nightly
       set_fact:
@@ -53,8 +91,8 @@
 
     - name: Download Neovim latest release
       get_url:
-        url: "https://github.com/neovim/neovim/releases/download/{{ desired_version }}/nvim-linux-{{ ISA }}.tar.gz"
-        dest: "/tmp/nvim-linux-{{ ISA }}.tar.gz"
+        url: "https://github.com/neovim/neovim/releases/download/{{ desired_version }}/nvim-{{ os }}-{{ ISA }}.tar.gz"
+        dest: "/tmp/nvim-{{ os }}-{{ ISA }}.tar.gz"
         mode: '0644'
 
     - name: Create /opt/nvim directory
@@ -72,14 +110,14 @@
 
     - name: Extract Neovim to /tmp for inspection
       unarchive:
-        src: "/tmp/nvim-linux-{{ ISA }}.tar.gz"
+        src: "/tmp/nvim-{{ os }}-{{ ISA }}.tar.gz"
         dest: /tmp/nvim-extracted
-        creates: /tmp/nvim-extracted/nvim-linux-x86_64
+        creates: /tmp/nvim-extracted/nvim-{{ os }}-x86_64
 
-    - name: "/tmp/nvim-extracted/nvim-linux-{{ ISA }} is empty?"
+    - name: "/tmp/nvim-extracted/nvim-{{ os }}-{{ ISA }} is empty?"
       shell: ls -lA
       args:
-        chdir: "/tmp/nvim-extracted/nvim-linux-{{ ISA }}"
+        chdir: "/tmp/nvim-extracted/nvim-{{ os }}-{{ ISA }}"
       register: contents
 
     - name: Remove previous version 
@@ -92,7 +130,7 @@
         - "{{ ansible_facts['env']['HOME'] }}/.config/nvim"
 
     - name: Move Neovim files to /opt/nvim
-      shell: mv "/tmp/nvim-extracted/nvim-linux-{{ ISA }}/" /opt/nvim/
+      shell: mv "/tmp/nvim-extracted/nvim-{{ os }}-{{ ISA }}/" /opt/nvim/
       when: contents["stdout_lines"] | length > 1 # total: 0 counts as 1
       become: yes
 
@@ -108,3 +146,11 @@
         create: yes
         mode: '0644'
       become: yes
+
+    - name: Clean up downloaded tarball and extracted files
+      file:
+        path: "{{ item }}"
+        state: absent
+      loop:
+        - "/tmp/nvim-{{ os }}-{{ ISA }}.tar.gz"
+        - /tmp/nvim-extracted

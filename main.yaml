@@ -1,12 +1,14 @@
 ---
 - import_playbook: deps.yaml
   tags: ["deps"]
+- import_playbook: pyenv.yaml
+  tags: ["never", "pyenv"]
 - import_playbook: fonts.yaml
   tags: ["fonts"]
 - import_playbook: go.yaml
   tags: ["go"]
 - import_playbook: ebpf.yaml
-  tags: ["ebpf"]
+  tags: ["never", "ebpf"]
 - import_playbook: neovim.yaml
   tags: ["nvim"]
 - import_playbook: kickstart.yaml

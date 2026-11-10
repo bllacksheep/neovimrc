@@ -14,6 +14,7 @@
       tags: ["font"]
 
     - name: Install font on macOS
+      become: false
       ansible.builtin.homebrew_cask:
         name: "{{ font_package }}"
       when: is_macos

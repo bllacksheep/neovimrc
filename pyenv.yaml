@@ -1,0 +1,89 @@
+- name: Setup development environment
+  hosts: localhost
+  gather_facts: yes
+  become: no
+  vars:
+    current_shell: "{{ ansible_facts['user_shell'] | basename }}"
+    lazygit_repo: "https://github.com/jesseduffield/lazygit"
+    python_env_name: "nvim"
+    python_version: "3.12.0"
+  tasks:
+    - name: Remove previous version
+      ansible.builtin.file:
+        name: "{{ ansible_facts['env']['HOME'] }}/.pyenv"
+        state: absent
+
+    - name: Ensure pyenv and virtualenv are installed
+      ansible.builtin.shell: |
+        if ! command -v pyenv &> /dev/null; then
+          curl https://pyenv.run | bash
+        fi
+      args:
+        executable: /bin/bash
+      register: pyenv_installed
+
+    - name: Create and activate Python virtualenv for Vimspector
+      ansible.builtin.shell: |
+        export PATH="$HOME/.pyenv/bin:$PATH"
+        eval "$(pyenv init --path)"
+        eval "$(pyenv init -)"
+        eval "$(pyenv virtualenv-init -)"
+        pyenv install -s "{{ python_version }}" 
+        pyenv global "{{ python_version }}"
+        pyenv virtualenv "{{ python_version }}" "{{ python_env_name }}"
+        pyenv activate "{{ python_env_name }}"
+        pip install pynvim
+        pyenv deactivate
+      args:
+        executable: /bin/bash
+      when: pyenv_installed.failed == true
+      
+    - name: Install LazyGit on Linux
+      ansible.builtin.shell: |
+        if ! command -v lazygit &> /dev/null; then
+          LAZYGIT_VERSION=$(curl -s "https://api.github.com/repos/jesseduffield/lazygit/releases/latest" | grep -Po '"tag_name": *"v\K[^"]*')
+          curl -Lo /tmp/lazygit.tar.gz "{{ lazygit_repo }}/releases/download/v${LAZYGIT_VERSION}/lazygit_${LAZYGIT_VERSION}_Linux_{{ ISA }}.tar.gz"
+          tar xf /tmp/lazygit.tar.gz -C /usr/local/bin/
+          rm -rf /tmp/lazygit.tar.gz
+        fi
+      when: is_ubuntu or is_rhel
+      become: yes
+      args:
+        executable: /bin/bash
+
+    - name: Add alias for nvim if not present
+      ansible.builtin.lineinfile:
+        path: "{{ item }}" 
+        line: "alias vim='nvim'"
+        state: present
+      loop: "{{ [ '~/.bashrc' ] if current_shell == 'bash' else [ '~/.zshrc' ] if current_shell == 'zsh' else [] }}"
+      tags: ["never"]
+
+    - name: Add pyenv to rc
+      ansible.builtin.blockinfile:
+        path: "{{ item }}" 
+        block: |
+          export PATH="$HOME/.pyenv/bin:$PATH"
+          eval "$(pyenv init --path)"
+          eval "$(pyenv init -)"
+          eval "$(pyenv virtualenv-init -)"
+        state: present
+        marker: "# {mark} ANSIBLE PYENV BLOCK"
+        backup: yes
+      loop: "{{ [ '~/.bashrc' ] if current_shell == 'bash' else [ '~/.zshrc' ] if current_shell == 'zsh' else [] }}"
+
+    - name: Enable profile.d 
+      ansible.builtin.blockinfile:
+        path: "{{ item }}" 
+        block: |
+          if [ -d /etc/profile.d ]; then
+            for i in /etc/profile.d/*.sh; do
+              [ -r "$i" ] && . "$i"
+            done
+            unset i
+          fi
+        state: present
+        marker: "# {mark} ANSIBLE PROFILE BLOCK"
+        backup: yes
+      loop: "{{ [ '~/.bashrc' ] if current_shell == 'bash' else [ '~/.zshrc' ] if current_shell == 'zsh' else [] }}"
+
