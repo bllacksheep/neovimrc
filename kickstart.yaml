@@ -21,6 +21,8 @@
         recurse: yes
 
     - name: Sync customizations
-      ansible.builtin.shell: nvim --headless -c "luafile after/plugin/sync.lua" -c "lua Sync({})" -c "qa"
+      ansible.builtin.shell: /opt/nvim/bin/nvim --headless -c "luafile after/plugin/sync.lua" -c "lua Sync({})" -c "qa"
+      args:
+        chdir: "{{ playbook_dir }}"
       tags: ["sync"]
     

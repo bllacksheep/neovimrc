@@ -49,7 +49,6 @@
         fail_msg: "Neovim is already up-to-date ({{ installed_version }} >= {{ desired_version }}). Skipping upgrade."
         success_msg: "Neovim needs upgrade ({{ installed_version }} < {{ desired_version }}). Continuing."
       when: nvim.failed == false and 'bypassversioncheck' not in ansible_run_tags
-      tags: ["always"]
 
     - name: Install dependencies for Neovim
       package:
@@ -59,13 +58,12 @@
           - gettext
           - unzip
           - curl
-          - gnu-tar
+          - tar
           - npm
           - lazygit
-          - fd
+          - fd-find
           - npm
         state: present
-      become: yes
       when: is_linux
 
     - name: Install packages on macOS
