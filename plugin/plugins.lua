@@ -14,7 +14,7 @@ require('flash').setup {
   },
 }
 
-vim.keymap.set({ 'n', 'x', 'o' }, 's', function() require('flash').jump() end, { desc = 'Flash' })
+vim.keymap.set({ 'n', 'x', 'o' }, 'ss', function() require('flash').jump() end, { desc = 'Flash' })
 vim.keymap.set({ 'n', 'x', 'o' }, 'S', function() require('flash').treesitter() end, { desc = 'Flash Treesitter' })
 vim.keymap.set({ 'o' }, 'r', function() require('flash').remote() end, { desc = 'Remote Flash' })
 vim.keymap.set({ 'x', 'o' }, 'R', function() require('flash').treesitter_search() end, { desc = 'Treesitter Search' })
@@ -85,3 +85,12 @@ vim.api.nvim_create_autocmd('LspProgress', {
 
 vim.keymap.set({ 'n' }, '<leader>.', function() Snacks.scratch() end, { desc = 'Toggle Scratch Buffer' })
 vim.keymap.set({ 'n' }, '<leader>S', function() Snacks.scratch.select() end, { desc = 'Select Scratch Buffer' })
+
+vim.keymap.set('n', '*', function()
+  local word = vim.fn.expand('<cword>')
+  if word ~= '' then
+    vim.fn.setreg('/', '\\C\\<' .. vim.fn.escape(word, '\\/') .. '\\>')
+    vim.opt.hlsearch = true
+  end
+end, { desc = 'Highlight word under cursor without jumping (case-sensitive)' })
+
