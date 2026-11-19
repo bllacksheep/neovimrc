@@ -94,3 +94,23 @@ vim.keymap.set('n', '*', function()
   end
 end, { desc = 'Highlight word under cursor without jumping (case-sensitive)' })
 
+
+vim.keymap.set('x', '*', function()
+  -- Exit visual mode to update '< and '> marks, while preserving cursor position
+  local saved_pos = vim.fn.getcurpos()
+  vim.cmd('normal! \27')
+  vim.fn.setpos('.', saved_pos)
+
+  -- Extract the selected text
+  local lines = vim.fn.getregion(vim.fn.getpos("'<"), vim.fn.getpos("'>"), { type = vim.fn.visualmode() })
+  local text = table.concat(lines, '\n')
+
+  if text ~= '' then
+    -- Use \V (very nomagic) so dots in cfg.Name are treated literally
+    local escaped = vim.fn.escape(text, '\\/')
+    escaped = escaped:gsub('\n', '\\n')
+    vim.fn.setreg('/', '\\C\\V' .. escaped)
+    vim.opt.hlsearch = true
+  end
+end, { desc = 'Highlight' })
+
